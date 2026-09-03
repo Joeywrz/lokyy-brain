@@ -95,7 +95,7 @@ anbindest, über dieselbe Wahrheit.
 
 ## Features
 
-- **CM6-Editor** mit Live-Preview, Wikilinks (`[[Notiz]]`) und Backlinks
+- **CM6-Editor** mit Live-Preview, gerenderten Markdown-Tabellen, Wikilinks (`[[Notiz]]`) und Backlinks
 - **Wissensgraph** aus Wikilinks, automatisch abgeleitet
 - **Zwei-Stufen-Suche**: Volltext (Tier 1) + semantische Embeddings (Tier 2,
   `nomic-embed-text` via Ollama + pgvector), gemerged

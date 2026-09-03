@@ -25,6 +25,10 @@ import {
   frontmatterHideTheme,
 } from "./frontmatterHide.js";
 import { calloutExtension, calloutTheme } from "./callouts.js";
+import {
+  markdownTableExtension,
+  markdownTableTheme,
+} from "./tablePreview.js";
 
 /**
  * Per-note cursor persistence (Story: editor save-lifecycle overhaul).
@@ -223,6 +227,9 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
         // greifen, damit dessen Inline-Decorations nicht in den Block hinein
         // rendern.
         calloutExtension, calloutTheme,
+        // GFM-Pipe-Tabellen als echte HTML-Tabelle darstellen. Sobald der
+        // Cursor in der Tabelle steht, bleibt das rohe Markdown editierbar.
+        markdownTableExtension, markdownTableTheme,
         livePreview,
         wikilinkExtension(
           (target) => onOpenRef.current(target),
