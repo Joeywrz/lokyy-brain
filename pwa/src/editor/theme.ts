@@ -47,7 +47,7 @@ export const lokyyTheme = EditorView.theme(
       border: "1px solid #2A323D",
       borderRadius: "4px",
       padding: "0.5px 5px",
-      color: "#FFA94D",
+      color: "#FFFFFF",
     },
     ".cm-wikilink": {
       color: "#F97316",
@@ -63,9 +63,9 @@ export const lokyyTheme = EditorView.theme(
     },
     ".cm-wikilink-unresolved:hover": { color: "#FFC588" },
     ".cm-tag": {
-      color: "#FFA94D",
-      background: "rgba(255,169,77,0.08)",
-      border: "1px solid rgba(255,169,77,0.25)",
+      color: "#FFFFFF",
+      background: "#1A1F26",
+      border: "1px solid #2A323D",
       borderRadius: "5px",
       padding: "0 5px",
     },
@@ -79,9 +79,11 @@ export const lokyyHighlight = syntaxHighlighting(
     { tag: t.heading, color: "#FFFFFF", fontWeight: "600" },
     { tag: t.link, color: "#F97316" },
     { tag: t.url, color: "#5A6270" },
-    { tag: t.quote, color: "#8B9099", fontStyle: "italic" },
-    { tag: t.list, color: "#F97316" },
-    { tag: t.monospace, color: "#FFA94D" },
+    { tag: t.quote, color: "#FFFFFF", fontStyle: "italic" },
+    // Lezer applies list tags to the whole item, not just its marker.
+    // Reserve accent text for navigation, not ordinary reading content.
+    { tag: t.list, color: "#FFFFFF" },
+    { tag: t.monospace, color: "#FFFFFF" },
     // Markdown-Marker (#, **, -) dezent, solange sie sichtbar sind
     { tag: t.processingInstruction, color: "#5A6270" },
   ]),
