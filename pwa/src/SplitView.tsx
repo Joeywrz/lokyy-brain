@@ -4,6 +4,7 @@ import { Editor, type EditorHandle } from "./editor/Editor.js";
 import { DragHandle, useResizableWidth } from "./Resizable.js";
 import { api } from "./api.js";
 import { C, FONT } from "./theme.js";
+import "./SplitView.css";
 
 /**
  * Split-View Editor — Obsidian-style.
@@ -57,6 +58,7 @@ export function SplitView({
   primaryScrollToLine,
   primaryEditorRef,
 }: SplitViewProps): JSX.Element {
+  const primaryPane = useRef<HTMLDivElement>(null);
   // Primary pane width (pixels). Default seeded once; resizable handle updates it.
   const [primaryWidth, setPrimaryWidth] = useResizableWidth({
     storageKey: "splitview-primary",
@@ -178,10 +180,11 @@ export function SplitView({
 
   // Split layout
   return (
+    <div className="split-view-container">
     <div
+      className="split-view-layout"
       style={{
         display: "flex",
-        flexDirection: "row",
         height: "100%",
         width: "100%",
         minHeight: 0,
@@ -189,8 +192,10 @@ export function SplitView({
       }}
     >
       <div
+        className="split-view-primary"
+        ref={primaryPane}
         style={{
-          width: primaryWidth,
+          width: `min(${primaryWidth}px, calc(100% - 326px))`,
           flexShrink: 0,
           display: "flex",
           flexDirection: "column",
@@ -211,12 +216,14 @@ export function SplitView({
         </div>
       </div>
 
+      <div className="split-view-handle">
       <DragHandle
         side="left"
-        getWidth={() => primaryWidth}
+        getWidth={() => primaryPane.current?.getBoundingClientRect().width ?? primaryWidth}
         setWidth={setPrimaryWidth}
         onReset={() => setPrimaryWidth(600)}
       />
+      </div>
 
       <div
         style={{
@@ -272,6 +279,7 @@ export function SplitView({
           )}
         </div>
       </div>
+    </div>
     </div>
   );
 }

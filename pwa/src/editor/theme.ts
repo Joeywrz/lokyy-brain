@@ -22,7 +22,11 @@ export const lokyyTheme = EditorView.theme(
     ".cm-content": {
       fontFamily: "'Fraunces', Georgia, serif",
       padding: "32px 0",
-      maxWidth: "640px",
+      width: "calc(100% - 32px)",
+      maxWidth: "var(--lokyy-editor-width, 960px)",
+      minWidth: "0",
+      boxSizing: "border-box",
+      flex: "0 0 auto",
       margin: "0 auto",
       caretColor: "#F97316",
       lineHeight: "1.85",

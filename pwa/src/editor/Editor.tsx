@@ -5,6 +5,7 @@ import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
 import { markdown } from "@codemirror/lang-markdown";
 import { autocompletion } from "@codemirror/autocomplete";
 import { lokyyTheme, lokyyHighlight } from "./theme.js";
+import { EditorFrame } from "./EditorFrame.js";
 import { livePreview } from "./livePreview.js";
 import { wikilinkExtension } from "./wikilink.js";
 import { slashSource } from "./slashCommands.js";
@@ -381,5 +382,5 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
     v.focus();
   }, [scrollToLine]);
 
-  return <div ref={host} style={{ height: "100%", overflow: "hidden" }} />;
+  return <EditorFrame><div ref={host} style={{ height: "100%", overflow: "hidden" }} /></EditorFrame>;
 });

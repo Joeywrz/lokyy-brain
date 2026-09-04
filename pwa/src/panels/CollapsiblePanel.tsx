@@ -275,6 +275,9 @@ export function CollapsiblePanel(props: {
           ? { width: "100%", maxHeight: "100%" }
           : { height: "100%" }),
         minHeight: 0,
+        minWidth: 0,
+        maxWidth: "100%",
+        boxSizing: "border-box",
         flexShrink: 0,
         background: C.panel,
         ...sectionBorderStyle,

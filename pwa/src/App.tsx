@@ -2546,8 +2546,8 @@ export function App() {
               </Suspense>
             </div>
           ) : active ? (
-            <div style={{ flex: 1, minHeight: 0, display: "flex" }}>
-              <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
+            <div style={{ flex: 1, minHeight: 0, minWidth: 0, display: "flex" }}>
+              <div style={{ flex: 1, minHeight: 0, minWidth: 0, display: "flex", flexDirection: "column" }}>
                 <NoteHeader
                   noteId={active.id}
                   title={active.title || active.id}
