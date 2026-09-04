@@ -103,11 +103,12 @@ export function wikilinkExtension(
         // the server logs on the resulting GET), fall back to the raw
         // wikilink target otherwise.
         const resolved = resolveWikilinkTarget(link);
-        logTrace({ noteId: resolved?.id ?? link, source: "wikilink" });
+        const target = resolved?.id ?? link;
+        logTrace({ noteId: target, source: "wikilink" });
         if ((event.metaKey || event.ctrlKey) && onOpenSplit) {
-          onOpenSplit(link);
+          onOpenSplit(target);
         } else {
-          onOpen(link);
+          onOpen(target);
         }
         return true;
       }
