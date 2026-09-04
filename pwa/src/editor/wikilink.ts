@@ -96,7 +96,7 @@ export function wikilinkExtension(
   const clicks = EditorView.domEventHandlers({
     mousedown(event) {
       const el = event.target as HTMLElement | null;
-      const link = el?.dataset?.link;
+      const link = el?.closest<HTMLElement>("[data-link]")?.dataset.link;
       if (link) {
         // Phase A Wave A1 / Story 3 — Retrieval-Trace-Log.
         // Resolve to the canonical note-id when we can (matches what
