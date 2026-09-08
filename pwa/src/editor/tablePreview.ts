@@ -1,3 +1,4 @@
+import { markdownLanguage } from "@codemirror/lang-markdown";
 import { type EditorState, StateField } from "@codemirror/state";
 import { Decoration, type DecorationSet, EditorView, WidgetType } from "@codemirror/view";
 
@@ -9,41 +10,6 @@ export interface MarkdownTable {
   headers: string[];
   alignments: TableAlignment[];
   rows: string[][];
-}
-
-interface SourceLine {
-  text: string;
-  from: number;
-  to: number;
-}
-
-function sourceLines(source: string): SourceLine[] {
-  const lines = source.split("\n");
-  let offset = 0;
-  return lines.map((text) => {
-    const line = { text, from: offset, to: offset + text.length };
-    offset += text.length + 1;
-    return line;
-  });
-}
-
-function hasTablePipe(line: string): boolean {
-  let codeTicks = 0;
-  for (let i = 0; i < line.length; i++) {
-    if (line[i] === "\\") {
-      i++;
-      continue;
-    }
-    if (line[i] === "`") {
-      let run = 1;
-      while (line[i + run] === "`") run++;
-      codeTicks = codeTicks === run ? 0 : codeTicks === 0 ? run : codeTicks;
-      i += run - 1;
-      continue;
-    }
-    if (line[i] === "|" && codeTicks === 0) return true;
-  }
-  return false;
 }
 
 function splitTableRow(source: string): string[] {
@@ -95,73 +61,28 @@ function normalizeRow(cells: string[], width: number): string[] {
   return Array.from({ length: width }, (_, index) => cells[index] ?? "");
 }
 
-/** Parse the GFM pipe-table subset used by normal Lokyy notes. */
+/** Use the editor's Markdown grammar for block boundaries, not a second scanner. */
 export function parseMarkdownTables(source: string): MarkdownTable[] {
-  const lines = sourceLines(source);
+  // Frontmatter is note metadata, not Markdown. Preserve original document offsets.
+  const frontmatter = source.match(/^---[^\S\n]*\n[\s\S]*?^(?:---|\.\.\.)[^\S\n]*(?:\n|$)/m);
+  const offset = frontmatter?.index === 0 ? frontmatter[0].length : 0;
+  if (!offset && source.split("\n", 1)[0].trim() === "---") return [];
+  const body = source.slice(offset);
   const tables: MarkdownTable[] = [];
-  let fence: { char: string; length: number } | null = null;
-  let frontmatter = lines[0]?.text.trim() === "---";
-  let htmlComment = false;
-
-  for (let i = 0; i < lines.length - 1; i++) {
-    const line = lines[i];
-    if (frontmatter) {
-      if (i > 0 && /^(---|\.\.\.)\s*$/.test(line.text)) frontmatter = false;
-      continue;
-    }
-
-    if (htmlComment || line.text.includes("<!--")) {
-      htmlComment = !line.text.includes("-->");
-      continue;
-    }
-
-    const fenceMatch = line.text.match(/^\s{0,3}(`{3,}|~{3,})(.*)$/);
-    if (!fence && fenceMatch) {
-      const marker = fenceMatch[1];
-      fence = { char: marker[0], length: marker.length };
-      continue;
-    }
-    if (fence) {
-      const closingFence = line.text.match(/^\s{0,3}(`{3,}|~{3,})\s*$/);
-      if (
-        closingFence &&
-        closingFence[1][0] === fence.char &&
-        closingFence[1].length >= fence.length
-      ) {
-        fence = null;
-      }
-      continue;
-    }
-    if (/^( {4}|\t)/.test(line.text) || !hasTablePipe(line.text)) continue;
-
-    const headers = splitTableRow(line.text);
-    const delimiterLine = lines[i + 1];
-    if (!hasTablePipe(delimiterLine.text)) continue;
-    const delimiterCells = splitTableRow(delimiterLine.text);
-    if (headers.length === 0 || delimiterCells.length !== headers.length) continue;
-
-    const alignments = delimiterCells.map(parseAlignment);
-    if (alignments.some((alignment) => alignment === undefined)) continue;
-
-    const rows: string[][] = [];
-    let lastLine = delimiterLine;
-    let j = i + 2;
-    while (j < lines.length && hasTablePipe(lines[j].text)) {
-      rows.push(normalizeRow(splitTableRow(lines[j].text), headers.length));
-      lastLine = lines[j];
-      j++;
-    }
-
+  for (const node of markdownLanguage.parser.parse(body).topNode.getChildren("Table")) {
+    const lines = body.slice(node.from, node.to).split("\n");
+    // Keep Lokyy's existing inline-code/escaped-pipe cell semantics.
+    const headers = splitTableRow(lines[0]);
+    const alignments = splitTableRow(lines[1]).map(parseAlignment);
+    if (alignments.length !== headers.length || alignments.some((value) => value === undefined)) continue;
     tables.push({
-      from: line.from,
-      to: lastLine.to,
+      from: offset + node.from,
+      to: offset + node.to,
       headers,
       alignments: alignments as TableAlignment[],
-      rows,
+      rows: lines.slice(2).map((line) => normalizeRow(splitTableRow(line), headers.length)),
     });
-    i = j - 1;
   }
-
   return tables;
 }
 
@@ -187,7 +108,8 @@ function appendInline(parent: HTMLElement, source: string): void {
       const separator = value.indexOf("|");
       const target = (separator >= 0 ? value.slice(0, separator) : value).trim();
       const label = (separator >= 0 ? value.slice(separator + 1) : value).trim();
-      const link = document.createElement("span");
+      const link = document.createElement("button");
+      link.type = "button";
       link.className = "cm-markdown-table-link";
       link.dataset.link = target;
       link.textContent = label;
@@ -238,8 +160,16 @@ class MarkdownTableWidget extends WidgetType {
     const wrapper = document.createElement("div");
     wrapper.className = "cm-markdown-table-wrap";
     wrapper.title = "Klicken, um die Tabelle zu bearbeiten";
+    // Let native controls keep focus and keyboard activation; CodeMirror's
+    // keymap would otherwise turn Enter on a button into a document edit.
+    wrapper.addEventListener("keydown", (event) => {
+      if ((event.target as HTMLElement).closest("a, button")) event.stopPropagation();
+    });
     wrapper.addEventListener("mousedown", (event) => {
-      if ((event.target as HTMLElement).closest("a, .cm-markdown-table-link")) return;
+      if ((event.target as HTMLElement).closest("a, button")) {
+        event.stopPropagation();
+        return;
+      }
       event.preventDefault();
       view.dispatch({
         selection: { anchor: this.table.from },
@@ -307,6 +237,8 @@ export const markdownTableExtension = StateField.define<DecorationSet>({
 });
 
 export const markdownTableTheme = EditorView.theme({
+  // Let the editor shrink; only the table wrapper should scroll horizontally.
+  ".cm-content": { minWidth: "0" },
   ".cm-markdown-table-wrap": {
     display: "block",
     maxWidth: "100%",
@@ -316,6 +248,9 @@ export const markdownTableTheme = EditorView.theme({
   ".cm-markdown-table": {
     width: "100%",
     borderCollapse: "collapse",
+    // Do not inherit CodeMirror's overflow-wrap:anywhere min-content sizing.
+    overflowWrap: "normal",
+    wordBreak: "normal",
     fontSize: "0.92em",
   },
   ".cm-markdown-table th": {
@@ -339,8 +274,19 @@ export const markdownTableTheme = EditorView.theme({
     border: "1px solid #2A323D",
     borderRadius: "4px",
     background: "#1A1F26",
-    color: "#FFA94D",
+    color: "#FFFFFF",
     fontFamily: "'JetBrains Mono', ui-monospace, monospace",
+  },
+  ".cm-markdown-table-link": {
+    background: "none",
+    border: "none",
+    padding: "0",
+    font: "inherit",
+    textAlign: "inherit",
+  },
+  ".cm-markdown-table-link:focus-visible": {
+    outline: "2px solid #F97316",
+    outlineOffset: "2px",
   },
   ".cm-markdown-table a, .cm-markdown-table-link": {
     color: "#F97316",

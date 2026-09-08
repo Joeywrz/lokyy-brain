@@ -93,26 +93,28 @@ export function wikilinkExtension(
     { decorations: (v) => v.decos },
   );
 
+  function activate(event: MouseEvent, selector: string): boolean {
+    const el = event.target as HTMLElement | null;
+    const link = el?.closest<HTMLElement>(selector)?.dataset.link;
+    if (!link) return false;
+    const target = resolveWikilinkTarget(link)?.id ?? link;
+    logTrace({ noteId: target, source: "wikilink" });
+    if ((event.metaKey || event.ctrlKey) && onOpenSplit) {
+      onOpenSplit(target);
+    } else {
+      onOpen(target);
+    }
+    return true;
+  }
+
   const clicks = EditorView.domEventHandlers({
     mousedown(event) {
-      const el = event.target as HTMLElement | null;
-      const link = el?.closest<HTMLElement>("[data-link]")?.dataset.link;
-      if (link) {
-        // Phase A Wave A1 / Story 3 — Retrieval-Trace-Log.
-        // Resolve to the canonical note-id when we can (matches what
-        // the server logs on the resulting GET), fall back to the raw
-        // wikilink target otherwise.
-        const resolved = resolveWikilinkTarget(link);
-        const target = resolved?.id ?? link;
-        logTrace({ noteId: target, source: "wikilink" });
-        if ((event.metaKey || event.ctrlKey) && onOpenSplit) {
-          onOpenSplit(target);
-        } else {
-          onOpen(target);
-        }
-        return true;
-      }
-      return false;
+      // Native preview buttons activate on click (including Enter/Space), once only.
+      if ((event.target as HTMLElement | null)?.closest("button[data-link]")) return false;
+      return activate(event, "[data-link]");
+    },
+    click(event) {
+      return activate(event, "button[data-link]");
     },
   });
 

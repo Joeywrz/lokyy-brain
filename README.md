@@ -96,6 +96,9 @@ anbindest, über dieselbe Wahrheit.
 ## Features
 
 - **CM6-Editor** mit Live-Preview, gerenderten Markdown-Tabellen, Wikilinks (`[[Notiz]]`) und Backlinks
+  - Tabellen respektieren Markdown-Blockgrenzen; breite Inhalte scrollen innerhalb der Tabelle.
+    Klick auf eine Zelle zeigt das unveränderte Markdown zur Bearbeitung. Tabellen-Wikilinks
+    sind per Tab erreichbar und mit Enter/Leertaste bedienbar; Cmd/Ctrl-Klick öffnet die Split-Ansicht.
 - **Wissensgraph** aus Wikilinks, automatisch abgeleitet
 - **Zwei-Stufen-Suche**: Volltext (Tier 1) + semantische Embeddings (Tier 2,
   `nomic-embed-text` via Ollama + pgvector), gemerged
