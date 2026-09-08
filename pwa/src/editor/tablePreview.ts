@@ -12,7 +12,7 @@ export interface MarkdownTable {
   rows: string[][];
 }
 
-function splitTableRow(source: string): string[] {
+function splitTableRow(source: string, protectCodePipes = true): string[] {
   let line = source.trim();
   if (line.startsWith("|")) line = line.slice(1);
 
@@ -27,10 +27,18 @@ function splitTableRow(source: string): string[] {
       i++;
       continue;
     }
-    if (char === "`") {
+    if (codeTicks === 0 && char === "\\" && /[\\`]/.test(line[i + 1] ?? "")) {
+      cell += char + line[++i];
+      continue;
+    }
+    if (protectCodePipes && char === "`") {
       let run = 1;
       while (line[i + run] === "`") run++;
-      codeTicks = codeTicks === run ? 0 : codeTicks === 0 ? run : codeTicks;
+      if (codeTicks === run) codeTicks = 0;
+      // Unmatched runs are literal; only a same-length run can close code.
+      else if (codeTicks === 0 && line.slice(i + run).match(/`+/g)?.some((ticks) => ticks.length === run)) {
+        codeTicks = run;
+      }
       cell += "`".repeat(run);
       i += run - 1;
       continue;
@@ -50,7 +58,7 @@ function splitTableRow(source: string): string[] {
 
 function parseAlignment(cell: string): TableAlignment | undefined {
   const marker = cell.replace(/\s/g, "");
-  if (!/^:?-{3,}:?$/.test(marker)) return undefined;
+  if (!/^:?-+:?$/.test(marker)) return undefined;
   if (marker.startsWith(":") && marker.endsWith(":")) return "center";
   if (marker.endsWith(":")) return "right";
   if (marker.startsWith(":")) return "left";
@@ -71,8 +79,8 @@ export function parseMarkdownTables(source: string): MarkdownTable[] {
   const tables: MarkdownTable[] = [];
   for (const node of markdownLanguage.parser.parse(body).topNode.getChildren("Table")) {
     const lines = body.slice(node.from, node.to).split("\n");
-    // Keep Lokyy's existing inline-code/escaped-pipe cell semantics.
-    const headers = splitTableRow(lines[0]);
+    // Headers must match the grammar's columns; body rows retain Lokyy's code-pipe semantics.
+    const headers = splitTableRow(lines[0], false);
     const alignments = splitTableRow(lines[1]).map(parseAlignment);
     if (alignments.length !== headers.length || alignments.some((value) => value === undefined)) continue;
     tables.push({

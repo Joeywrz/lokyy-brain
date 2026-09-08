@@ -91,6 +91,43 @@ describe("parseMarkdownTables", () => {
     expect(table.rows).toEqual([["`a | b`", "links | rechts"]]);
   });
 
+  it.each([
+    ["unmatched `tick", "value"],
+    ["unmatched ``tick`", "value"],
+    ["escaped \\`tick", "value`"],
+    ["escaped \\`tick", "value"],
+  ])("keeps columns after literal backticks in %s", (first, second) => {
+    const [table] = parseMarkdownTables(`| A | B |\n|---|---|\n| ${first} | ${second} |`);
+    expect(table.rows).toEqual([[first, second]]);
+  });
+
+  it.each([
+    ["`a | b`", ["`a | b`", "value"]],
+    ["``a ` | b``", ["``a ` | b``", "value"]],
+    ["\\\\`a | b`", ["\\\\`a | b`", "value"]],
+    ["`a \\` | b", ["`a \\`", "b"]],
+  ])("preserves matched code-pipe semantics for %s", (row, expected) => {
+    const [table] = parseMarkdownTables(`| A | B |\n|---|---|\n| ${row} | value |`);
+    expect(table.rows).toEqual([expected]);
+  });
+
+  it("accepts the grammar's one- and two-hyphen alignment markers", () => {
+    const [table] = parseMarkdownTables("| A | B | C |\n|:-|--:|:-:|\n| a | b | c |");
+    expect(table.alignments).toEqual(["left", "right", "center"]);
+  });
+
+  it("uses the grammar's header columns when backticks contain unescaped pipes", () => {
+    const [table] = parseMarkdownTables("| `a | b` | B |\n|---|---|---|\n| a | b | c |");
+    expect(table.headers).toEqual(["`a", "b`", "B"]);
+    expect(table.rows).toEqual([["a", "b", "c"]]);
+    expect(parseMarkdownTables("| `a | b` | B |\n|---|---|")).toEqual([]);
+  });
+
+  it("keeps escaped header code pipes in a single grammar column", () => {
+    const [table] = parseMarkdownTables("| `a \\| b` | B |\n|---|---|");
+    expect(table.headers).toEqual(["`a | b`", "B"]);
+  });
+
   it("ignores table-looking text inside fenced code", () => {
     expect(
       parseMarkdownTables("```markdown\n| A | B |\n|---|---|\n| 1 | 2 |\n```")
