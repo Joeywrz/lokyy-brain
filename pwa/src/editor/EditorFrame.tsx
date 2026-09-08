@@ -56,9 +56,10 @@ export function EditorFrame({ children }: { children: ReactNode }) {
     } as CSSProperties}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end",
         flexWrap: "wrap", gap: 8, padding: "4px 16px", flexShrink: 0 }}>
-        {!persisted && <span role="status" style={{ fontSize: 12 }}>Nicht dauerhaft gespeichert</span>}
-        <label htmlFor={id} style={{ fontSize: 12, color: "#A8AFBD" }}>Textbreite</label>
+        {!persisted && <span role="status" style={{ fontSize: 12 }}>Ansichtsbreite nicht dauerhaft gespeichert</span>}
+        <label htmlFor={id} style={{ fontSize: 12, color: "#A8AFBD" }}>Ansichtsbreite</label>
         <select id={id} value={width} onChange={event => chooseWidth(event.target.value)}
+          title="Lesetext bleibt mittig; Tabellen können die zusätzliche Breite nutzen."
           style={{ font: "inherit", fontSize: 12, color: "#E6E8EC", background: "#1C222C",
             border: "1px solid #454F60", borderRadius: 6, minHeight: 36, padding: "4px 8px", maxWidth: "100%" }}>
           <option value="reading">Lesebreite</option>

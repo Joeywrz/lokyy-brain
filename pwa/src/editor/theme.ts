@@ -34,7 +34,14 @@ export const lokyyTheme = EditorView.theme(
     ".cm-cursor, .cm-dropCursor": { borderLeftColor: "#F97316" },
     "&.cm-focused .cm-selectionBackground, .cm-selectionBackground, ::selection":
       { backgroundColor: "rgba(249,115,22,0.20)" },
-    ".cm-line": { padding: "0 6px" },
+    // Keep prose and headings centered while tables can use the wider canvas.
+    ".cm-line": {
+      padding: "0 6px",
+      width: "100%",
+      maxWidth: "800px",
+      margin: "0 auto",
+      boxSizing: "border-box",
+    },
     ".cm-activeLine": { backgroundColor: "rgba(249,115,22,0.06)" },
     ".cm-gutters": { display: "none" },
 

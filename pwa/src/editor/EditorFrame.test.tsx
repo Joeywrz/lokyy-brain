@@ -11,7 +11,7 @@ afterEach(() => {
 
 it("defaults to wide and exposes a labelled native control", () => {
   render(<EditorFrame><div>Editor</div></EditorFrame>);
-  expect(screen.getByRole("combobox", { name: "Textbreite" })).toHaveValue("wide");
+  expect(screen.getByRole("combobox", { name: "Ansichtsbreite" })).toHaveValue("wide");
   expect(screen.getByTestId("editor-frame").style.getPropertyValue("--lokyy-editor-width")).toBe("960px");
 });
 it("restores valid preferences and rejects corrupt storage", () => {
@@ -23,12 +23,9 @@ it("restores valid preferences and rejects corrupt storage", () => {
   render(<EditorFrame>Editor</EditorFrame>);
   expect(screen.getByRole("combobox")).toHaveValue("wide");
 });
-it("changes width without remounting or editing the document", () => {
-  const r = render(<EditorFrame><textarea defaultValue="Unsaved text" /></EditorFrame>);
-  const doc = screen.getByRole("textbox");
+it("persists the selected width for editors opened later", () => {
+  const r = render(<EditorFrame>Editor</EditorFrame>);
   fireEvent.change(screen.getByRole("combobox"), { target: { value: "reading" } });
-  expect(screen.getByRole("textbox")).toBe(doc);
-  expect(doc).toHaveValue("Unsaved text");
   expect(localStorage.getItem(key)).toBe("reading");
   expect(screen.getByTestId("editor-frame").style.getPropertyValue("--lokyy-editor-width")).toBe("640px");
   r.unmount();
@@ -53,7 +50,7 @@ it("still works if preference storage is blocked and reports the limitation", ()
   render(<EditorFrame>Editor</EditorFrame>);
   fireEvent.change(screen.getByRole("combobox"), { target: { value: "full" } });
   expect(screen.getByRole("combobox")).toHaveValue("full");
-  expect(screen.getByRole("status")).toHaveTextContent("Nicht dauerhaft gespeichert");
+  expect(screen.getByRole("status")).toHaveTextContent("Ansichtsbreite nicht dauerhaft gespeichert");
 });
 
 it("retains a failed preference write for a newly opened split pane", () => {

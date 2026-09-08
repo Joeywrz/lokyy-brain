@@ -96,6 +96,11 @@ anbindest, über dieselbe Wahrheit.
 ## Features
 
 - **CM6-Editor** mit Live-Preview, Wikilinks (`[[Notiz]]`) und Backlinks
+  - **Ansichtsbreite:** Lesebreite (640 px), Breit (960 px, Standard) oder Volle Breite;
+    die Auswahl wird lokal im Browser gespeichert und zwischen offenen Editoren abgeglichen.
+    Lesetext bleibt zentriert und höchstens 800 px breit; Block-Vorschauen können die
+    zusätzliche Fläche nutzen. Bei höchstens 700 px verfügbarem Editorplatz stehen
+    Split-Panes untereinander statt nebeneinander. Ein Breitenwechsel verändert die Notiz nicht.
 - **Wissensgraph** aus Wikilinks, automatisch abgeleitet
 - **Zwei-Stufen-Suche**: Volltext (Tier 1) + semantische Embeddings (Tier 2,
   `nomic-embed-text` via Ollama + pgvector), gemerged
